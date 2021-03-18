@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Unlock MIUI IME</string>
+    <string name="xposeddescription">Unlock MIUI Enhance keyboard;Instructions: Check the input method to be unlocked in the xposed scope</string>
+</resources>

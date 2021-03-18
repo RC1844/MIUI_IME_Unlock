@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.xposed.miuiime">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true">
+    <!--xposed 配置开始-->
+    <!--xposedmodule： 表示这是一个xposed模块-->
+    <meta-data
+        android:name="xposedmodule"
+        android:value="true" />
+    <!--xposeddescription: 描述该模块的用途，可以引用string.xml中的字符串-->
+    <meta-data
+        android:name="xposeddescription"
+        android:value="@string/xposeddescription" />
+    <!--xposedminversion：要求支持的Xposed Framework最低版本 并不是指定82 就写82-->
+    <meta-data
+        android:name="xposedminversion"
+        android:value="93" />
+    <meta-data
+        android:name="xposedscope"
+        android:resource="@array/HookList" />
+    <!--xposed 配置开始-->
+    </application>
+</manifest>

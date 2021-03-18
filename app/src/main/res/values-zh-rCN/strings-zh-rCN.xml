@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">解锁MIUI键盘优化</string>
+    <string name="xposeddescription">解锁MIUI全面屏键盘优化输入法限制。使用方法：在作用域勾选需要解锁的输入法。</string>
+</resources>
