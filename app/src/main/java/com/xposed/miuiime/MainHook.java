@@ -46,7 +46,7 @@ public class MainHook implements IXposedHookLoadPackage {
                             super.afterHookedMethod(param);
 //                            0xFF141414,0xFFA1A1A1,0x66A1A1A1
 //                            0xFFE7E8EB,0x66000000,0x80000000
-                            callStaticMethod(clazz, "customizeBottomViewColor", true, param.args[0], 0x66747474, 0xff747474);
+                            callStaticMethod(clazz, "customizeBottomViewColor", true, param.args[0], 0xff747474, 0x66747474);
                         }
                     });
                 }
