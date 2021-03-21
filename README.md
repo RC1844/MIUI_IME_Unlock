@@ -22,3 +22,12 @@ Xposed API Version >= 93
 
 或
 <https://cdn.staticaly.com/gh/RC1844/MIUI_IME_Unlock/main/app/release/app-release.apk>
+
+## 更新日志
+
+v1.02
+
+    优化执行逻辑
+    部分hook方法不会对定制版进行hook
+    增加对底视图颜色的修改，颜色完全由输入法控制
+
