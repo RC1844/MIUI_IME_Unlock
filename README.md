@@ -18,10 +18,7 @@ Xposed API Version >= 93
 
 ## 下载
 
-[app/release/app-release.apk](app/release/app-release.apk)
-
-或
-<https://cdn.staticaly.com/gh/RC1844/MIUI_IME_Unlock/main/app/release/app-release.apk>
+[app-release.apk](../../release)
 
 ## 特别说明
 
@@ -31,6 +28,10 @@ Xposed API Version >= 93
 4. 不接受任何为特定输入法适配 xxx 的请求，这不现实不合理。
 
 ## 更新日志
+
+v1.04
+
+    对 MIUI12 改回使用旧的hook点
 
 v1.03
 
@@ -43,6 +44,3 @@ v1.02
     优化执行逻辑
     部分hook方法不会对定制版进行hook
     增加对底视图颜色的修改，颜色完全由输入法控制
-v1.04
-
-    对 MIUI12 改回使用旧的hook点

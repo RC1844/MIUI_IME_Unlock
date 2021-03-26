@@ -3,9 +3,6 @@ package com.xposed.miuiime;
 import android.content.Context;
 import android.view.inputmethod.InputMethodManager;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
@@ -101,28 +98,8 @@ public class MainHook implements IXposedHookLoadPackage {
         };
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     public void isMIUI() {
-        String line = "V0";
-        BufferedReader input = null;
-        try {
-            Process p = Runtime.getRuntime().exec("getprop ro.miui.ui.version.name");
-            input = new BufferedReader(new InputStreamReader(p.getInputStream()), 1024);
-            line = input.readLine();
-            input.close();
-
-        } catch (IOException ex) {
-            XposedBridge.log("Unable to read sysprop ro.miui.ui.version.name" + ex);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    XposedBridge.log("Exception while closing InputStream" + e);
-                }
-            }
-        }
-        switch (line) {
+        switch (PropertyUtils.get("ro.miui.ui.version.name", "")) {
             case "V125":
                 isMIUI12 = false;
                 isMIUI125 = true;
