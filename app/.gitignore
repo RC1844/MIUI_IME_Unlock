@@ -1,2 +1,5 @@
 /build
 /release
+/.settings
+/bin
+/.project
