@@ -1,6 +1,5 @@
 package com.xposed.miuiime;
 
-import android.content.Context;
 import android.view.inputmethod.InputMethodManager;
 
 import java.util.Arrays;
@@ -34,11 +33,12 @@ public class MainHook implements IXposedHookLoadPackage {
                     if (isNonCustom) {
                         XposedBridge.log("Hook ServiceInjector: " + lpparam.packageName);
                         Class<?> clazz = findClass("android.inputmethodservice.InputMethodServiceInjector", lpparam.classLoader);
-
+                        setsIsImeSupport(clazz);
                         if (isMIUI12)
-                            findAndHookMethod(clazz, "isImeSupport", Context.class, setsIsImeSupport(clazz));
-                        else
-                            findAndHookMethod(clazz, "isCanLoadPlugin", Context.class, setsIsImeSupport(clazz));
+                            findAndHookMethod(clazz, "isXiaoAiEnable", XC_MethodReplacement.returnConstant(false));
+//                            findAndHookMethod(clazz, "isImeSupport", Context.class, setsIsImeSupport(clazz));
+//                        else
+//                            findAndHookMethod(clazz, "isCanLoadPlugin", Context.class, setsIsImeSupport(clazz));
 
                         findAndHookMethod("com.android.internal.policy.PhoneWindow", lpparam.classLoader, "setNavigationBarColor", int.class, new XC_MethodHook() {
                             @Override
@@ -59,7 +59,9 @@ public class MainHook implements IXposedHookLoadPackage {
                                 XposedBridge.log("Hook MiuiBottomView: " + lpparam.packageName);
                                 final Class<?> clazz = findClass("com.miui.inputmethod.InputMethodBottomManager", (ClassLoader) param.args[0]);
                                 if (isNonCustom) {
-                                    findAndHookMethod(clazz, "checkMiuiBottomSupport", setsIsImeSupport(clazz));
+                                    setsIsImeSupport(clazz);
+                                    findAndHookMethod(clazz, "isXiaoAiEnable", XC_MethodReplacement.returnConstant(false));
+//                                    findAndHookMethod(clazz, "checkMiuiBottomSupport", setsIsImeSupport(clazz));
                                 }
                                 if (mImm != null) {
                                     XposedBridge.log("Hook getSupportIme Method: " + lpparam.packageName);
@@ -73,13 +75,8 @@ public class MainHook implements IXposedHookLoadPackage {
         });
     }
 
-    private XC_MethodHook setsIsImeSupport(Class<?> clazz) {
-        return new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1);
-            }
-        };
+    private void setsIsImeSupport(Class<?> clazz) {
+        XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1);
     }
 
     public void isMIUI() {
