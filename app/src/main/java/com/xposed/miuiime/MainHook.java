@@ -46,17 +46,11 @@ public class MainHook implements IXposedHookLoadPackage {
 //                            0xFF141414,0xFFA1A1A1,0x66A1A1A1
 //                            0xFFE7E8EB,0x66000000,0x80000000
                                 callStaticMethod(clazz, "customizeBottomViewColor", true, param.args[0], 0xff747474, 0x66747474);
-                                super.afterHookedMethod(param);
                             }
                         });
                     }
                     if (isMIUI12) {
-                        findAndHookMethod("android.inputmethodservice.InputMethodServiceInjector$MiuiSwitchInputMethodListener", lpparam.classLoader, "deleteNotSupportIme", new XC_MethodReplacement() {
-                            @Override
-                            protected Object replaceHookedMethod(MethodHookParam param) {
-                                return null;
-                            }
-                        });
+                        findAndHookMethod("android.inputmethodservice.InputMethodServiceInjector$MiuiSwitchInputMethodListener", lpparam.classLoader, "deleteNotSupportIme", XC_MethodReplacement.returnConstant(null));
                     } else {
                         InputMethodManager mImm = (InputMethodManager) getObjectField(param.thisObject, "mImm");
                         findAndHookMethod("android.inputmethodservice.InputMethodModuleManager", lpparam.classLoader, "loadDex", ClassLoader.class, String.class, new XC_MethodHook() {
@@ -69,21 +63,12 @@ public class MainHook implements IXposedHookLoadPackage {
                                 }
                                 if (mImm != null) {
                                     XposedBridge.log("Hook getSupportIme Method: " + lpparam.packageName);
-                                    findAndHookMethod(clazz, "getSupportIme", new XC_MethodHook() {
-                                        @Override
-                                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                            param.setResult(mImm.getEnabledInputMethodList());
-                                            super.beforeHookedMethod(param);
-                                            // XposedBridge.log("Hooked getSupportIme Method: " + lpparam.packageName);
-                                        }
-                                    });
+                                    findAndHookMethod(clazz, "getSupportIme", XC_MethodReplacement.returnConstant(mImm.getEnabledInputMethodList()));
                                 }
-                                super.afterHookedMethod(param);
                             }
                         });
                     }
                 }
-                super.beforeHookedMethod(param);
             }
         });
     }
@@ -93,7 +78,6 @@ public class MainHook implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1);
-                super.beforeHookedMethod(param);
             }
         };
     }
