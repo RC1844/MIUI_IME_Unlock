@@ -1,5 +1,6 @@
 package com.xposed.miuiime;
 
+import android.os.Build;
 import android.view.inputmethod.InputMethodManager;
 
 import java.util.Arrays;
@@ -19,22 +20,22 @@ import static de.robv.android.xposed.XposedHelpers.getObjectField;
 
 public class MainHook implements IXposedHookLoadPackage {
     final static List<String> miuiImeList = Arrays.asList("com.iflytek.inputmethod.miui", "com.sohu.inputmethod.sogou.xiaomi", "com.baidu.input_mi", "com.miui.catcherpatch");
-    boolean isMIUI12;
-    boolean isMIUI125;
+    boolean isA10;
+    boolean isA11;
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
         findAndHookMethod("android.inputmethodservice.InputMethodService", lpparam.classLoader, "initViews", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                isMIUI();
-                if (isMIUI12 || isMIUI125) {
-                    final boolean isNonCustom = !miuiImeList.contains(lpparam.packageName);
-                    if (isNonCustom) {
+                checkVersion();
+                if (isA10 || isA11) {
+                    final boolean isNonCustomize = !miuiImeList.contains(lpparam.packageName);
+                    if (isNonCustomize) {
                         XposedBridge.log("Hook ServiceInjector: " + lpparam.packageName);
                         Class<?> clazz = findClass("android.inputmethodservice.InputMethodServiceInjector", lpparam.classLoader);
                         setsIsImeSupport(clazz);
-                        if (isMIUI12)
+                        if (isA10)
                             findAndHookMethod(clazz, "isXiaoAiEnable", XC_MethodReplacement.returnConstant(false));
 //                            findAndHookMethod(clazz, "isImeSupport", Context.class, setsIsImeSupport(clazz));
 //                        else
@@ -49,7 +50,7 @@ public class MainHook implements IXposedHookLoadPackage {
                             }
                         });
                     }
-                    if (isMIUI12) {
+                    if (isA10) {
                         findAndHookMethod("android.inputmethodservice.InputMethodServiceInjector$MiuiSwitchInputMethodListener", lpparam.classLoader, "deleteNotSupportIme", XC_MethodReplacement.returnConstant(null));
                     } else {
                         InputMethodManager mImm = (InputMethodManager) getObjectField(param.thisObject, "mImm");
@@ -58,7 +59,7 @@ public class MainHook implements IXposedHookLoadPackage {
                             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                                 XposedBridge.log("Hook MiuiBottomView: " + lpparam.packageName);
                                 final Class<?> clazz = findClass("com.miui.inputmethod.InputMethodBottomManager", (ClassLoader) param.args[0]);
-                                if (isNonCustom) {
+                                if (isNonCustomize) {
                                     setsIsImeSupport(clazz);
                                     findAndHookMethod(clazz, "isXiaoAiEnable", XC_MethodReplacement.returnConstant(false));
 //                                    findAndHookMethod(clazz, "checkMiuiBottomSupport", setsIsImeSupport(clazz));
@@ -79,19 +80,19 @@ public class MainHook implements IXposedHookLoadPackage {
         XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1);
     }
 
-    public void isMIUI() {
-        switch (PropertyUtils.get("ro.miui.ui.version.name", "")) {
-            case "V125":
-                isMIUI12 = false;
-                isMIUI125 = true;
+    public void checkVersion() {
+        switch (Build.VERSION.SDK_INT) {
+            case 30:
+                isA10 = false;
+                isA11 = true;
                 break;
-            case "V12":
-                isMIUI12 = true;
-                isMIUI125 = false;
+            case 29:
+                isA10 = true;
+                isA11 = false;
                 break;
             default:
-                isMIUI12 = false;
-                isMIUI125 = false;
+                isA10 = false;
+                isA11 = false;
         }
     }
 }

@@ -29,6 +29,11 @@ Xposed API Version >= 93
 
 ## 更新日志
 
+v1.06
+
+    更换检查MIUI版本为检查Android版本
+    删除旧方法依赖的代码
+
 v1.05
 
     感谢 @ketal178 帮忙删除无用的代码
