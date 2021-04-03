@@ -30,6 +30,11 @@ Xposed API Version >= 93
 
 ## 更新日志
 
+v1.08
+
+    删除一个hook函数，解决重复hook
+    整理代码
+
 v1.07
 
     增加检查prop ro.miui.support_miui_ime_bottom
