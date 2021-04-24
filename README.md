@@ -18,7 +18,7 @@ Xposed API Version >= 93
 
 ## 下载
 
-[app-release.apk](../../release)
+[app-release.apk](https://github.com/RC1844/MIUI_IME_Unlock/releases)
 
 ## 特别说明
 
