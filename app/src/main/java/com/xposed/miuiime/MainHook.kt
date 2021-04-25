@@ -5,11 +5,10 @@ import android.os.Build
 import android.view.inputmethod.InputMethodManager
 import de.robv.android.xposed.*
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
-import java.util.*
 
 class MainHook : IXposedHookLoadPackage {
-    var isA10 = false
-    var isA11 = false
+    private var isA10 = false
+    private var isA11 = false
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         //检查是否支持全面屏优化
         if (PropertyUtils["ro.miui.support_miui_ime_bottom", "0"] != "1") return
@@ -117,8 +116,7 @@ class MainHook : IXposedHookLoadPackage {
     /**
      * 检查Android版本
      */
-    @TargetApi(Build.VERSION_CODES.DONUT)
-    fun checkVersion() {
+    private fun checkVersion() {
         when (Build.VERSION.SDK_INT) {
             30 -> {
                 isA10 = false
@@ -136,7 +134,7 @@ class MainHook : IXposedHookLoadPackage {
     }
 
     companion object {
-        val miuiImeList = Arrays.asList(
+        val miuiImeList: List<String> = listOf(
             "com.iflytek.inputmethod.miui",
             "com.sohu.inputmethod.sogou.xiaomi", "com.baidu.input_mi", "com.miui.catcherpatch"
         )

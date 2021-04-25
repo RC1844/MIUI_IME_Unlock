@@ -5,10 +5,8 @@ import de.robv.android.xposed.XposedBridge
 import java.lang.reflect.Method
 
 object PropertyUtils {
-    @Volatile
     private var get: Method? = null
 
-    @SuppressLint("PrivateApi")
     operator fun get(prop: String?, defaultvalue: String?): String? {
         var value = defaultvalue
         try {
@@ -21,7 +19,7 @@ object PropertyUtils {
                     }
                 }
             }
-            value = get!!.invoke(null, *arrayOf<Any?>(prop, defaultvalue)) as String
+            value = get!!.invoke(null, prop, defaultvalue) as String
         } catch (e: Exception) {
             XposedBridge.log(e)
         }
