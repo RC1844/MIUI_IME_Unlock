@@ -17,7 +17,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -29,6 +30,18 @@ android {
         variant.outputs.all {
             outputFileName = "Unlock_MIUI_IME-${variant.versionName}_${variant.buildType.name}.apk"
         }
+    }
+    aaptOptions {
+        additionalParameters "--preferred-density", "xxxhdpi"
+    }
+    packagingOptions {
+        exclude 'META-INF/**'
+        exclude 'kotlin/**'
+        exclude 'google/**'
+        exclude '**.bin'
+    }
+    dependenciesInfo {
+        includeInApk false
     }
 }
 
