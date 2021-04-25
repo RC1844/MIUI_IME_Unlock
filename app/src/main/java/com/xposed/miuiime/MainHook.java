@@ -1,5 +1,6 @@
 package com.xposed.miuiime;
 
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.view.inputmethod.InputMethodManager;
 
@@ -46,7 +47,7 @@ public class MainHook implements IXposedHookLoadPackage {
                         lpparam.classLoader, "setNavigationBarColor",
                         int.class, new XC_MethodHook() {
                             @Override
-                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            protected void afterHookedMethod(MethodHookParam param) {
 //                                      0xff747474, 0x66747474
                                 int color = 0xFFFFFFFF - (int) param.args[0];
                                 XposedHelpers.callStaticMethod(clazz, "customizeBottomViewColor",
@@ -68,7 +69,7 @@ public class MainHook implements IXposedHookLoadPackage {
                     ClassLoader.class, String.class,
                     new XC_MethodHook() {
                         @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        protected void afterHookedMethod(MethodHookParam param) {
                             final Class<?> clazz = findClass("com.miui.inputmethod.InputMethodBottomManager",
                                     (ClassLoader) param.args[0]);
                             if (isNonCustomize) {
@@ -79,8 +80,9 @@ public class MainHook implements IXposedHookLoadPackage {
                             //针对A11的修复切换输入法列表
                             findAndHookMethod(clazz, "getSupportIme",
                                     new XC_MethodReplacement() {
+                                        @TargetApi(Build.VERSION_CODES.CUPCAKE)
                                         @Override
-                                        protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                                        protected Object replaceHookedMethod(MethodHookParam param) {
                                             return ((InputMethodManager) getObjectField(
                                                     getStaticObjectField(clazz, "sBottomViewHelper"),
                                                     "mImm")).getEnabledInputMethodList();
@@ -98,7 +100,11 @@ public class MainHook implements IXposedHookLoadPackage {
      * @param clazz 声明或继承字段的类
      */
     private void hookSIsImeSupport(Class<?> clazz) {
-        XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1);
+        try {
+            XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1);
+        } catch (Exception e) {
+            XposedBridge.log(e);
+        }
     }
 
     /**
@@ -107,13 +113,18 @@ public class MainHook implements IXposedHookLoadPackage {
      * @param clazz 声明或继承方法的类
      */
     private void hookIsXiaoAiEnable(Class<?> clazz) {
-        findAndHookMethod(clazz, "isXiaoAiEnable",
-                XC_MethodReplacement.returnConstant(false));
+        try {
+            findAndHookMethod(clazz, "isXiaoAiEnable",
+                    XC_MethodReplacement.returnConstant(false));
+        } catch (Exception e) {
+            XposedBridge.log(e);
+        }
     }
 
     /**
      * 检查Android版本
      */
+    @TargetApi(Build.VERSION_CODES.DONUT)
     public void checkVersion() {
         switch (Build.VERSION.SDK_INT) {
             case 30:

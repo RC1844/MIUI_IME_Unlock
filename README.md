@@ -30,6 +30,11 @@ Xposed API Version >= 93
 
 ## 更新日志
 
+v1.09
+
+    无实质更新
+    加了个try
+
 v1.08
 
     删除一个hook函数，解决重复hook

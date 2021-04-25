@@ -4,10 +4,13 @@ import android.annotation.SuppressLint;
 
 import java.lang.reflect.Method;
 
+import de.robv.android.xposed.XposedBridge;
+
 public class PropertyUtils {
 
     private static volatile Method get = null;
 
+    @SuppressLint("PrivateApi")
     public static String get(String prop, String defaultvalue) {
         String value = defaultvalue;
         try {
@@ -20,8 +23,8 @@ public class PropertyUtils {
                 }
             }
             value = (String) (get.invoke(null, new Object[]{prop, defaultvalue}));
-        } catch (Throwable e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            XposedBridge.log(e);
         }
         return value;
     }
