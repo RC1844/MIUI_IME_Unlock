@@ -5,6 +5,11 @@ import de.robv.android.xposed.*
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 
 class MainHook : IXposedHookLoadPackage {
+    private val miuiImeList: List<String> = listOf(
+        "com.iflytek.inputmethod.miui",
+        "com.sohu.inputmethod.sogou.xiaomi", "com.baidu.input_mi", "com.miui.catcherpatch"
+    )
+
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         //检查是否支持全面屏优化
         if (PropertyUtils["ro.miui.support_miui_ime_bottom", "0"] != "1") return
@@ -21,7 +26,7 @@ class MainHook : IXposedHookLoadPackage {
                 //将导航栏颜色赋值给输入法优化的底图
                 findAndHookMethod("com.android.internal.policy.PhoneWindow",
                     lpparam.classLoader, "setNavigationBarColor",
-                    Int::class.javaPrimitiveType, object : XC_MethodHook() {
+                    Int::class, object : XC_MethodHook() {
                         override fun afterHookedMethod(param: MethodHookParam) {
                             val color = -0x1 - param.args[0] as Int
                             XposedHelpers.callStaticMethod(
@@ -78,8 +83,15 @@ class MainHook : IXposedHookLoadPackage {
      *
      * @param clazz 声明或继承字段的类
      */
-    private fun hookSIsImeSupport(clazz: Class<*>) {
-        XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1)
+    fun hookSIsImeSupport(clazz: Class<*>) {
+        try {
+//            XposedBridge.log("Hook field sIsImeSupport")
+            XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1)
+            XposedBridge.log("Hook field sIsImeSupport success")
+        } catch (e: Throwable) {
+            XposedBridge.log("Hook field sIsImeSupport failed")
+            XposedBridge.log(e)
+        }
     }
 
     /**
@@ -87,7 +99,7 @@ class MainHook : IXposedHookLoadPackage {
      *
      * @param clazz 声明或继承方法的类
      */
-    private fun hookIsXiaoAiEnable(clazz: Class<*>) {
+    fun hookIsXiaoAiEnable(clazz: Class<*>) {
         findAndHookMethod(
             clazz, "isXiaoAiEnable",
             XC_MethodReplacement.returnConstant(false)
@@ -98,14 +110,13 @@ class MainHook : IXposedHookLoadPackage {
         clazz: Class<*>,
         methodName: String,
         vararg parameterTypesAndCallback: Any?
-    ): XC_MethodHook.Unhook? {
-        return try {
-            XposedBridge.log("Hook method $methodName")
+    ) {
+        try {
             XposedHelpers.findAndHookMethod(clazz, methodName, *parameterTypesAndCallback)
-        } catch (e: IllegalArgumentException) {
+            XposedBridge.log("Hook method $methodName success")
+        } catch (e: Throwable) {
             XposedBridge.log("Hook method $methodName failed")
             XposedBridge.log(e)
-            null
         }
     }
 
@@ -114,35 +125,25 @@ class MainHook : IXposedHookLoadPackage {
         classLoader: ClassLoader,
         methodName: String,
         vararg parameterTypesAndCallback: Any?
-    ): XC_MethodHook.Unhook? {
-        return try {
-            XposedBridge.log("Hook method $methodName")
-            XposedHelpers.findAndHookMethod(
-                XposedHelpers.findClass(className, classLoader),
+    ) {
+        findClass(className, classLoader)?.let {
+            findAndHookMethod(
+                it,
                 methodName,
                 *parameterTypesAndCallback
             )
-        } catch (e: IllegalArgumentException) {
-            XposedBridge.log("Hook method $methodName failed")
-            XposedBridge.log(e)
-            null
         }
     }
 
     fun findClass(className: String, classLoader: ClassLoader): Class<*>? {
         return try {
-            XposedBridge.log("Find class $className")
-            XposedHelpers.findClass(className, classLoader)
-        } catch (e: ClassNotFoundException) {
+            val clazz= XposedHelpers.findClass(className, classLoader)
+            XposedBridge.log("Find class $className success")
+            clazz
+        } catch (e: Throwable) {
             XposedBridge.log("Find class $className failed")
             XposedBridge.log(e)
             null
         }
     }
-
-    private val miuiImeList: List<String> = listOf(
-        "com.iflytek.inputmethod.miui",
-        "com.sohu.inputmethod.sogou.xiaomi", "com.baidu.input_mi", "com.miui.catcherpatch"
-    )
-
 }
