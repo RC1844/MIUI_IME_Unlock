@@ -7,8 +7,8 @@ import java.lang.reflect.Method
 object PropertyUtils {
     private var get: Method? = null
 
-    operator fun get(prop: String?, defaultvalue: String?): String? {
-        var value = defaultvalue
+    operator fun get(prop: String?, defaultValue: String?): String? {
+        var value = defaultValue
         try {
             if (null == get) {
                 synchronized(PropertyUtils::class.java) {
@@ -19,7 +19,7 @@ object PropertyUtils {
                     }
                 }
             }
-            value = get!!.invoke(null, prop, defaultvalue) as String
+            value = get!!.invoke(null, prop, defaultValue) as String
         } catch (e: Exception) {
             XposedBridge.log(e)
         }
