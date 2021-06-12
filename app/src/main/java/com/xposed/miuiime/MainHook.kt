@@ -38,11 +38,10 @@ class MainHook : IXposedHookLoadPackage {
             }
         }
         //针对A10的修复切换输入法列表
-        findAndHookMethod(
-            "android.inputmethodservice.InputMethodServiceInjector\$MiuiSwitchInputMethodListener",
-            lpparam.classLoader, "deleteNotSupportIme",
-            XC_MethodReplacement.returnConstant(null)
-        )
+        findClass("android.inputmethodservice.InputMethodServiceInjector\$MiuiSwitchInputMethodListener",
+            lpparam.classLoader)?.let {
+            hookDeleteNotSupportIme(it)
+        }
 
         //获取常用语的ClassLoader
         findAndHookMethod("android.inputmethodservice.InputMethodModuleManager",
@@ -72,6 +71,12 @@ class MainHook : IXposedHookLoadPackage {
                                     ) as InputMethodManager).enabledInputMethodList
                                 }
                             })
+                    }
+                    findClass(
+                        "com.miui.inputmethod.InputMethodBottomManager\$MiuiSwitchInputMethodListener",
+                        param.args[0] as ClassLoader
+                    )?.let {
+                        hookDeleteNotSupportIme(it)
                     }
                 }
             })
@@ -103,6 +108,18 @@ class MainHook : IXposedHookLoadPackage {
         findAndHookMethod(
             clazz, "isXiaoAiEnable",
             XC_MethodReplacement.returnConstant(false)
+        )
+    }
+
+    /**
+     * 修复切换输入法列表
+     *
+     * @param clazz 声明或继承方法的类
+     */
+    fun hookDeleteNotSupportIme(clazz: Class<*>) {
+        findAndHookMethod(
+            clazz, "deleteNotSupportIme",
+            XC_MethodReplacement.returnConstant(null)
         )
     }
 
