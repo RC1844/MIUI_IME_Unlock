@@ -26,7 +26,7 @@ class MainHook : IXposedHookLoadPackage {
                 //将导航栏颜色赋值给输入法优化的底图
                 findAndHookMethod("com.android.internal.policy.PhoneWindow",
                     lpparam.classLoader, "setNavigationBarColor",
-                    Int::class, object : XC_MethodHook() {
+                    Int::class.java, object : XC_MethodHook() {
                         override fun afterHookedMethod(param: MethodHookParam) {
                             val color = -0x1 - param.args[0] as Int
                             XposedHelpers.callStaticMethod(
@@ -36,12 +36,13 @@ class MainHook : IXposedHookLoadPackage {
                         }
                     })
             }
+
         }
-        //针对A10的修复切换输入法列表
-        findClass("android.inputmethodservice.InputMethodServiceInjector\$MiuiSwitchInputMethodListener",
-            lpparam.classLoader)?.let {
-            hookDeleteNotSupportIme(it)
-        }
+
+        hookDeleteNotSupportIme(
+            "android.inputmethodservice.InputMethodServiceInjector\$MiuiSwitchInputMethodListener",
+            lpparam.classLoader,
+        )
 
         //获取常用语的ClassLoader
         findAndHookMethod("android.inputmethodservice.InputMethodModuleManager",
@@ -49,6 +50,10 @@ class MainHook : IXposedHookLoadPackage {
             ClassLoader::class.java, String::class.java,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
+                    hookDeleteNotSupportIme(
+                        "com.miui.inputmethod.InputMethodBottomManager\$MiuiSwitchInputMethodListener",
+                        param.args[0] as ClassLoader,
+                    )
                     findClass(
                         "com.miui.inputmethod.InputMethodBottomManager",
                         param.args[0] as ClassLoader
@@ -72,15 +77,9 @@ class MainHook : IXposedHookLoadPackage {
                                 }
                             })
                     }
-                    findClass(
-                        "com.miui.inputmethod.InputMethodBottomManager\$MiuiSwitchInputMethodListener",
-                        param.args[0] as ClassLoader
-                    )?.let {
-                        hookDeleteNotSupportIme(it)
-                    }
                 }
             })
-        XposedBridge.log("Hook MIUI IME Success")
+        XposedBridge.log("Hook MIUI IME Done!")
     }
 
     /**
@@ -90,11 +89,10 @@ class MainHook : IXposedHookLoadPackage {
      */
     fun hookSIsImeSupport(clazz: Class<*>) {
         try {
-//            XposedBridge.log("Hook field sIsImeSupport")
             XposedHelpers.setStaticIntField(clazz, "sIsImeSupport", 1)
-            XposedBridge.log("Hook field sIsImeSupport success")
+            XposedBridge.log("Success:Hook field sIsImeSupport")
         } catch (e: Throwable) {
-            XposedBridge.log("Hook field sIsImeSupport failed")
+            XposedBridge.log("Failed:Hook field sIsImeSupport ")
             XposedBridge.log(e)
         }
     }
@@ -112,13 +110,15 @@ class MainHook : IXposedHookLoadPackage {
     }
 
     /**
-     * 修复切换输入法列表
+     * 针对A10的修复切换输入法列表
      *
-     * @param clazz 声明或继承方法的类
+     * @param className 声明或继承方法的类的名称
+     * @param classLoader 该类的加载器
      */
-    fun hookDeleteNotSupportIme(clazz: Class<*>) {
+    private fun hookDeleteNotSupportIme(className: String, classLoader: ClassLoader) {
         findAndHookMethod(
-            clazz, "deleteNotSupportIme",
+            className,
+            classLoader, "deleteNotSupportIme",
             XC_MethodReplacement.returnConstant(null)
         )
     }
@@ -130,9 +130,9 @@ class MainHook : IXposedHookLoadPackage {
     ) {
         try {
             XposedHelpers.findAndHookMethod(clazz, methodName, *parameterTypesAndCallback)
-            XposedBridge.log("Hook method $methodName success")
+            XposedBridge.log("Success:Hook method $methodName")
         } catch (e: Throwable) {
-            XposedBridge.log("Hook method $methodName failed")
+            XposedBridge.log("Failed:Hook method $methodName")
             XposedBridge.log(e)
         }
     }
@@ -154,11 +154,11 @@ class MainHook : IXposedHookLoadPackage {
 
     fun findClass(className: String, classLoader: ClassLoader): Class<*>? {
         return try {
-            val clazz= XposedHelpers.findClass(className, classLoader)
-            XposedBridge.log("Find class $className success")
+            val clazz = XposedHelpers.findClass(className, classLoader)
+            XposedBridge.log("Success:Find class $className")
             clazz
         } catch (e: Throwable) {
-            XposedBridge.log("Find class $className failed")
+            XposedBridge.log("Failed:Class not found:$className")
             XposedBridge.log(e)
             null
         }
