@@ -6,8 +6,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 
 class MainHook : IXposedHookLoadPackage {
     private val miuiImeList: List<String> = listOf(
-        "com.iflytek.inputmethod.miui",
-        "com.sohu.inputmethod.sogou.xiaomi", "com.baidu.input_mi", "com.miui.catcherpatch"
+            "com.iflytek.inputmethod.miui",
+            "com.sohu.inputmethod.sogou.xiaomi", "com.baidu.input_mi", "com.miui.catcherpatch"
     )
 
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
@@ -16,69 +16,77 @@ class MainHook : IXposedHookLoadPackage {
         //检查是否为小米定制输入法
         val isNonCustomize = !miuiImeList.contains(lpparam.packageName)
         if (isNonCustomize) {
+            var sInputMethodServiceInjector = "android.inputmethodservice.InputMethodServiceInjector"
+            try {
+                XposedHelpers.findClass(sInputMethodServiceInjector, lpparam.classLoader)
+            } catch (e: Throwable) {
+                XposedBridge.log("Failed:Class not found: $sInputMethodServiceInjector")
+                sInputMethodServiceInjector = "android.inputmethodservice.InputMethodServiceStubImpl"
+            }
+
             findClass(
-                "android.inputmethodservice.InputMethodServiceInjector",
-                lpparam.classLoader
+                    sInputMethodServiceInjector,
+                    lpparam.classLoader
             )?.let {
                 hookSIsImeSupport(it)
                 hookIsXiaoAiEnable(it)
 
                 //将导航栏颜色赋值给输入法优化的底图
                 findAndHookMethod("com.android.internal.policy.PhoneWindow",
-                    lpparam.classLoader, "setNavigationBarColor",
-                    Int::class.java, object : XC_MethodHook() {
-                        override fun afterHookedMethod(param: MethodHookParam) {
-                            val color = -0x1 - param.args[0] as Int
-                            XposedHelpers.callStaticMethod(
+                        lpparam.classLoader, "setNavigationBarColor",
+                        Int::class.java, object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val color = -0x1 - param.args[0] as Int
+                        XposedHelpers.callStaticMethod(
                                 it, "customizeBottomViewColor",
                                 true, param.args[0], color or -0x1000000, color or 0x66000000
-                            )
-                        }
-                    })
+                        )
+                    }
+                })
             }
 
         }
 
         hookDeleteNotSupportIme(
-            "android.inputmethodservice.InputMethodServiceInjector\$MiuiSwitchInputMethodListener",
-            lpparam.classLoader,
+                "android.inputmethodservice.InputMethodServiceInjector\$MiuiSwitchInputMethodListener",
+                lpparam.classLoader,
         )
 
         //获取常用语的ClassLoader
         findAndHookMethod("android.inputmethodservice.InputMethodModuleManager",
-            lpparam.classLoader, "loadDex",
-            ClassLoader::class.java, String::class.java,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    hookDeleteNotSupportIme(
-                        "com.miui.inputmethod.InputMethodBottomManager\$MiuiSwitchInputMethodListener",
-                        param.args[0] as ClassLoader,
-                    )
-                    findClass(
-                        "com.miui.inputmethod.InputMethodBottomManager",
-                        param.args[0] as ClassLoader
-                    )?.let {
-                        if (isNonCustomize) {
-                            hookSIsImeSupport(it)
-                            hookIsXiaoAiEnable(it)
-                        }
+                lpparam.classLoader, "loadDex",
+                ClassLoader::class.java, String::class.java,
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        hookDeleteNotSupportIme(
+                                "com.miui.inputmethod.InputMethodBottomManager\$MiuiSwitchInputMethodListener",
+                                param.args[0] as ClassLoader,
+                        )
+                        findClass(
+                                "com.miui.inputmethod.InputMethodBottomManager",
+                                param.args[0] as ClassLoader
+                        )?.let {
+                            if (isNonCustomize) {
+                                hookSIsImeSupport(it)
+                                hookIsXiaoAiEnable(it)
+                            }
 
-                        //针对A11的修复切换输入法列表
-                        findAndHookMethod(
-                            it, "getSupportIme",
-                            object : XC_MethodReplacement() {
-                                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                                    return (XposedHelpers.getObjectField(
-                                        XposedHelpers.getStaticObjectField(
-                                            it, "sBottomViewHelper"
-                                        ),
-                                        "mImm"
-                                    ) as InputMethodManager).enabledInputMethodList
-                                }
-                            })
+                            //针对A11的修复切换输入法列表
+                            findAndHookMethod(
+                                    it, "getSupportIme",
+                                    object : XC_MethodReplacement() {
+                                        override fun replaceHookedMethod(param: MethodHookParam): Any {
+                                            return (XposedHelpers.getObjectField(
+                                                    XposedHelpers.getStaticObjectField(
+                                                            it, "sBottomViewHelper"
+                                                    ),
+                                                    "mImm"
+                                            ) as InputMethodManager).enabledInputMethodList
+                                        }
+                                    })
+                        }
                     }
-                }
-            })
+                })
         XposedBridge.log("Hook MIUI IME Done!")
     }
 
@@ -104,8 +112,8 @@ class MainHook : IXposedHookLoadPackage {
      */
     fun hookIsXiaoAiEnable(clazz: Class<*>) {
         findAndHookMethod(
-            clazz, "isXiaoAiEnable",
-            XC_MethodReplacement.returnConstant(false)
+                clazz, "isXiaoAiEnable",
+                XC_MethodReplacement.returnConstant(false)
         )
     }
 
@@ -117,37 +125,37 @@ class MainHook : IXposedHookLoadPackage {
      */
     private fun hookDeleteNotSupportIme(className: String, classLoader: ClassLoader) {
         findAndHookMethod(
-            className,
-            classLoader, "deleteNotSupportIme",
-            XC_MethodReplacement.returnConstant(null)
+                className,
+                classLoader, "deleteNotSupportIme",
+                XC_MethodReplacement.returnConstant(null)
         )
     }
 
     fun findAndHookMethod(
-        clazz: Class<*>,
-        methodName: String,
-        vararg parameterTypesAndCallback: Any?
+            clazz: Class<*>,
+            methodName: String,
+            vararg parameterTypesAndCallback: Any?
     ) {
         try {
             XposedHelpers.findAndHookMethod(clazz, methodName, *parameterTypesAndCallback)
             XposedBridge.log("Success:Hook method $methodName")
         } catch (e: Throwable) {
             XposedBridge.log("Failed:Hook method $methodName")
-            XposedBridge.log(e)
+            // XposedBridge.log(e)
         }
     }
 
     private fun findAndHookMethod(
-        className: String,
-        classLoader: ClassLoader,
-        methodName: String,
-        vararg parameterTypesAndCallback: Any?
+            className: String,
+            classLoader: ClassLoader,
+            methodName: String,
+            vararg parameterTypesAndCallback: Any?
     ) {
         findClass(className, classLoader)?.let {
             findAndHookMethod(
-                it,
-                methodName,
-                *parameterTypesAndCallback
+                    it,
+                    methodName,
+                    *parameterTypesAndCallback
             )
         }
     }
@@ -159,7 +167,7 @@ class MainHook : IXposedHookLoadPackage {
             clazz
         } catch (e: Throwable) {
             XposedBridge.log("Failed:Class not found:$className")
-            XposedBridge.log(e)
+            // XposedBridge.log(e)
             null
         }
     }
