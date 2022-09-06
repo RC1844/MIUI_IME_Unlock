@@ -22,6 +22,9 @@ android {
             proguardFiles 'proguard-rules.pro'
         }
     }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -46,6 +49,7 @@ android {
 }
 
 dependencies {
-    implementation 'org.jetbrains:annotations:23.0.0'
-    compileOnly 'de.robv.android.xposed:api:82'
+    implementation("org.jetbrains:annotations:23.0.0")
+    compileOnly("de.robv.android.xposed:api:82")
+    implementation("com.github.kyuubiran:EzXHelper:1.0.3")
 }
