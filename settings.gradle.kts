@@ -11,9 +11,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://api.xposed.info/' }
+        maven("https://api.xposed.info/")
     }
 }
 
 rootProject.name = "MIUI IME"
-include ':app'
+include(":app")
