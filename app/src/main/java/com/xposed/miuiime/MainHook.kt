@@ -25,6 +25,7 @@ class MainHook : IXposedHookLoadPackage {
         "com.baidu.input_mi",
         "com.miui.catcherpatch"
     )
+    private var navBarColor: Int? = null
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         //检查是否支持全面屏优化
@@ -46,17 +47,7 @@ class MainHook : IXposedHookLoadPackage {
             sInputMethodServiceInjector?.also {
                 hookSIsImeSupport(it)
                 hookIsXiaoAiEnable(it)
-
-                //将导航栏颜色赋值给输入法优化的底图
-                findMethod("com.android.internal.policy.PhoneWindow") {
-                    name == "setNavigationBarColor" && parameterTypes.sameAs(Int::class.java)
-                }.hookAfter { param ->
-                    val color = -0x1 - param.args[0] as Int
-                    it.invokeStaticMethodAuto(
-                        "customizeBottomViewColor",
-                        true, param.args[0], color or -0x1000000, color or 0x66000000
-                    )
-                }
+                setPhraseBgColor(it)
             } ?: Log.e("Failed:Class not found: InputMethodServiceInjector")
         }
 
@@ -119,6 +110,46 @@ class MainHook : IXposedHookLoadPackage {
         }.onFailure {
             Log.i("Failed:Hook method isXiaoAiEnable")
             Log.i(it)
+        }
+    }
+
+    /**
+     * 在适当的时机修改抬高区域背景颜色
+     *
+     * @param clazz 声明或继承字段的类
+     */
+    private fun setPhraseBgColor(clazz: Class<*>) {
+        kotlin.runCatching {
+            // 导航栏颜色被设置后, 将颜色存储起来并传递给常用语
+            findMethod("com.android.internal.policy.PhoneWindow") {
+                name == "setNavigationBarColor" && parameterTypes.sameAs(Int::class.java)
+            }.hookAfter { param ->
+                navBarColor = param.args[0] as Int
+                customizeBottomViewColor(clazz)
+            }
+
+            // 当常用语被创建后, 将背景颜色设置为存储的导航栏颜色
+            clazz.findMethod { name == "addMiuiBottomView" }.hookAfter {
+                customizeBottomViewColor(clazz)
+            }
+        }.onFailure {
+            Log.i("Failed to set the color of the MiuiBottomView")
+            Log.i(it)
+        }
+    }
+
+    /**
+     * 将导航栏颜色赋值给输入法优化的底图
+     *
+     * @param clazz 声明或继承字段的类
+     */
+    private fun customizeBottomViewColor(clazz: Class<*>) {
+        navBarColor?.let {
+            val color = -0x1 - it
+            clazz.invokeStaticMethodAuto(
+                "customizeBottomViewColor",
+                true, navBarColor, color or -0x1000000, color or 0x66000000
+            )
         }
     }
 
