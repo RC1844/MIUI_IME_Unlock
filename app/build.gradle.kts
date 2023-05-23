@@ -1,3 +1,4 @@
+@file:Suppress("UnstableApiUsage")
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -30,7 +31,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    packagingOptions {
+    packaging {
         resources {
             excludes += arrayOf("META-INF/**", "kotlin/**", "google/**", "**.bin")
         }
@@ -48,7 +49,6 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains:annotations:23.0.0")
     compileOnly("de.robv.android.xposed:api:82")
     implementation("com.github.kyuubiran:EzXHelper:1.0.3")
 }
