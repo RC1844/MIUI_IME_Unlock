@@ -124,6 +124,8 @@ class MainHook : IXposedHookLoadPackage {
             findMethod("com.android.internal.policy.PhoneWindow") {
                 name == "setNavigationBarColor" && parameterTypes.sameAs(Int::class.java)
             }.hookAfter { param ->
+                if (param.args[0] == 0) return@hookAfter
+
                 navBarColor = param.args[0] as Int
                 customizeBottomViewColor(clazz)
             }
