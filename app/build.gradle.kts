@@ -5,14 +5,13 @@ plugins {
 }
 
 android {
-    compileSdk = 33
-    buildToolsVersion = "33.0.0"
+    compileSdk = 34
     namespace = "com.xposed.miuiime"
 
     defaultConfig {
         applicationId = "com.xposed.miuiime"
         minSdk = 28
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 11
         versionName = "1.13"
     }
@@ -45,6 +44,12 @@ android {
     }
     dependenciesInfo {
         includeInApk = false
+    }
+}
+
+kotlin {
+    sourceSets.all {
+        languageSettings.languageVersion = "2.0"
     }
 }
 
