@@ -6,6 +6,7 @@ import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import com.github.kyuubiran.ezxhelper.init.EzXHelperInit
 import com.github.kyuubiran.ezxhelper.utils.Log
+import com.github.kyuubiran.ezxhelper.utils.findAllMethods
 import com.github.kyuubiran.ezxhelper.utils.findMethod
 import com.github.kyuubiran.ezxhelper.utils.getObjectAs
 import com.github.kyuubiran.ezxhelper.utils.getStaticObject
@@ -121,6 +122,15 @@ class MainHook : IXposedHookLoadPackage {
             Log.i("Success:Hook field sIsImeSupport")
         }.onFailure {
             Log.i("Failed:Hook field sIsImeSupport")
+            Log.i(it)
+        }
+        kotlin.runCatching {
+            findAllMethods(clazz) {
+                name == "isImeSupport" && returnType == Boolean::class.javaPrimitiveType
+            }.hookReturnConstant(true)
+            Log.i("Success:Hook method isImeSupport")
+        }.onFailure {
+            Log.i("Failed:Hook method isImeSupport")
             Log.i(it)
         }
     }
