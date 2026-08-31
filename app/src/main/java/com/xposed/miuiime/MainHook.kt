@@ -34,6 +34,7 @@ class MainHook : IXposedHookLoadPackage {
         "com.miui.catcherpatch",
         "com.xiaomi.type",
     )
+    private val hookedImeSupportClasses = mutableSetOf<Class<*>>()
     private var navBarColor: Int? = null
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
@@ -59,7 +60,7 @@ class MainHook : IXposedHookLoadPackage {
                     ?: loadClassOrNull("android.inputmethodservice.InputMethodServiceStubImpl")
 
             sInputMethodServiceInjector?.also {
-                hookSIsImeSupport(it)
+                hookImeSupport(it)
                 hookIsXiaoAiEnable(it)
                 setPhraseBgColor(it)
             } ?: Log.e("Failed:Class not found: InputMethodServiceInjector")
@@ -78,8 +79,11 @@ class MainHook : IXposedHookLoadPackage {
             val dexPath = param.args[1] as String
             // 系统原始逻辑，若已加载dex则直接返回，避免重复hook
             if (loader !is BaseDexClassLoader) throw NoSuchMethodException("addDexPath method not found.")
-            runCatching {
+            val loadedBottomManager = runCatching {
                 Class.forName("com.miui.inputmethod.InputMethodBottomManager", true, loader)
+            }.getOrNull()
+            if (loadedBottomManager != null) {
+                if (isNonCustomize) hookImeSupport(loadedBottomManager)
                 param.result = null
                 return@hookBefore
             }
@@ -94,7 +98,7 @@ class MainHook : IXposedHookLoadPackage {
                 loader
             )?.also {
                 if (isNonCustomize) {
-                    hookSIsImeSupport(it)
+                    hookImeSupport(it)
                     hookIsXiaoAiEnable(it)
                 }
 
@@ -121,6 +125,27 @@ class MainHook : IXposedHookLoadPackage {
             Log.i("Success:Hook field sIsImeSupport")
         }.onFailure {
             Log.i("Failed:Hook field sIsImeSupport")
+            Log.i(it)
+        }
+    }
+
+    /**
+     * 恢复可能被输入法服务 onDestroy 重置的缓存字段，并 hook 判定方法防止再次失效。
+     */
+    private fun hookImeSupport(clazz: Class<*>) {
+        hookSIsImeSupport(clazz)
+        if (hookedImeSupportClasses.contains(clazz)) return
+
+        kotlin.runCatching {
+            val methods = clazz.declaredMethods.filter {
+                it.name == "isImeSupport" && it.returnType == Boolean::class.javaPrimitiveType
+            }
+            if (methods.isEmpty()) throw NoSuchMethodException("${clazz.name}.isImeSupport")
+            methods.forEach { it.hookReturnConstant(true) }
+            hookedImeSupportClasses.add(clazz)
+            Log.i("Success:Hook method isImeSupport")
+        }.onFailure {
+            Log.i("Failed:Hook method isImeSupport")
             Log.i(it)
         }
     }
