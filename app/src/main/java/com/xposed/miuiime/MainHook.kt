@@ -60,6 +60,7 @@ class MainHook : IXposedHookLoadPackage {
                     ?: loadClassOrNull("android.inputmethodservice.InputMethodServiceStubImpl")
 
             sInputMethodServiceInjector?.also {
+                ImeInsetsHook.registerManager(it)
                 hookSIsImeSupport(it)
                 hookIsXiaoAiEnable(it)
                 setPhraseBgColor(it)
@@ -80,7 +81,8 @@ class MainHook : IXposedHookLoadPackage {
             // 系统原始逻辑，若已加载dex则直接返回，避免重复hook
             if (loader !is BaseDexClassLoader) throw NoSuchMethodException("addDexPath method not found.")
             runCatching {
-                Class.forName("com.miui.inputmethod.InputMethodBottomManager", true, loader)
+                val manager = Class.forName("com.miui.inputmethod.InputMethodBottomManager", true, loader)
+                ImeInsetsHook.registerManager(manager)
                 param.result = null
                 return@hookBefore
             }
@@ -94,6 +96,7 @@ class MainHook : IXposedHookLoadPackage {
                 "com.miui.inputmethod.InputMethodBottomManager",
                 loader
             )?.also {
+                ImeInsetsHook.registerManager(it)
                 if (isNonCustomize) {
                     hookSIsImeSupport(it)
                     hookIsXiaoAiEnable(it)
