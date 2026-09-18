@@ -81,8 +81,7 @@ class MainHook : IXposedHookLoadPackage {
             // 系统原始逻辑，若已加载dex则直接返回，避免重复hook
             if (loader !is BaseDexClassLoader) throw NoSuchMethodException("addDexPath method not found.")
             runCatching {
-                val manager = Class.forName("com.miui.inputmethod.InputMethodBottomManager", true, loader)
-                ImeInsetsHook.registerManager(manager)
+                Class.forName("com.miui.inputmethod.InputMethodBottomManager", true, loader)
                 param.result = null
                 return@hookBefore
             }
