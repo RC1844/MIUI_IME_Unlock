@@ -3,6 +3,7 @@ package com.xposed.miuiime
 import android.content.Context
 import android.os.Binder
 import android.provider.Settings
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import com.github.kyuubiran.ezxhelper.init.EzXHelperInit
 import com.github.kyuubiran.ezxhelper.utils.Log
@@ -63,6 +64,7 @@ class MainHook : IXposedHookLoadPackage {
                 ImeInsetsHook.registerManager(it)
                 hookSIsImeSupport(it)
                 hookIsXiaoAiEnable(it)
+                BottomBarColorHook.setup(it)
                 setPhraseBgColor(it)
             } ?: Log.e("Failed:Class not found: InputMethodServiceInjector")
         }
@@ -166,11 +168,16 @@ class MainHook : IXposedHookLoadPackage {
 
                 navBarColor = param.args[0] as Int
                 customizeBottomViewColor(clazz)
+                // 输入法主动上报了颜色, 我的取色逻辑应当让路
+                BottomBarColorHook.onPublished(navBarColor as Int)
             }
 
             // 当常用语被创建后, 将背景颜色设置为存储的导航栏颜色
-            clazz.findMethod { name == "addMiuiBottomView" }.hookAfter {
+            clazz.findMethod { name == "addMiuiBottomView" }.hookAfter { param ->
                 customizeBottomViewColor(clazz)
+                // 同一个 hook 点, 把输入视图交给取色逻辑, 避免对同一方法重复 hook
+                // addMiuiBottomView(inflater, fullscreenArea, inputFrame, rootView, miuiBottomArea, imm, ims)
+                BottomBarColorHook.onBottomView(param.args.getOrNull(2) as? ViewGroup)
             }
         }.onFailure {
             Log.i("Failed to set the color of the MiuiBottomView")
